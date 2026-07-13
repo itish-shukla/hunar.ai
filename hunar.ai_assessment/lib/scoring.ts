@@ -1,19 +1,17 @@
 import { TIMES, type Day, type RedialInterval } from "./constants";
 
-// Penalty dictionaries — from "FE assignment - penalty dictionary.xlsx".
-// score = 100 + sum of the four penalties (each ≤ 0), floored at 0.
 const REDIAL_COUNT_PENALTY: Record<number, number> = {
   0: -100, 1: -90, 2: -55, 3: -31, 4: -13, 5: 0, 6: 0, 7: 0, 8: -19, 9: -43, 10: -76,
 };
+
 const INTERVAL_PENALTY: Record<RedialInterval, number> = {
   "3 hours": 0, "6 hours": 0, "9 hours": -12, "12 hours": -22, "24 hours": -34,
 };
-// Keyed by number of selected days. The dictionary starts at 1; 0 days means
-// the campaign can't call at all, so we treat it as the worst defined penalty.
+
 const DAYS_PENALTY: Record<number, number> = {
   0: -40, 1: -40, 2: -30, 3: -20, 4: -10, 5: 0, 6: 0, 7: 0,
 };
-// Keyed by window duration in hours. 8–13h → 0; under 3h clamps to the worst.
+
 const WINDOW_PENALTY: Record<number, number> = {
   3: -33, 4: -26, 5: -20, 6: -13, 7: -7,
 };
@@ -22,7 +20,6 @@ export type Level = 1 | 2 | 3 | 4;
 
 export type CampaignSettings = {
   selectedDays: readonly Day[];
-  /** [startIndex, endIndex] into TIMES */
   callingWindow: [number, number];
   redialCount: number;
   redialInterval: RedialInterval;

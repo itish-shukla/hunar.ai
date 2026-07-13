@@ -10,8 +10,6 @@ export const REDIAL_INTERVALS = [
 ] as const;
 export type RedialInterval = (typeof REDIAL_INTERVALS)[number];
 
-// Hour options for the calling window slider. `value` is the 24h clock hour;
-// the window duration is the difference between the two selected values.
 export const TIMES = [
   { label: "8 AM", value: 8 },
   { label: "9 AM", value: 9 },

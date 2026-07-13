@@ -34,9 +34,12 @@ export default function Home() {
   });
 
   const toggleDay = (day: Day) =>
-    setSelectedDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
-    );
+    setSelectedDays((prev) => {
+      if (!prev.includes(day)) return [...prev, day];
+      // Keep at least one calling day selected.
+      if (prev.length === 1) return prev;
+      return prev.filter((d) => d !== day);
+    });
 
   // Keep the two window thumbs at least one hour apart (no zero-width window).
   const handleWindowChange = ([start, end]: [number, number]) => {
@@ -72,8 +75,9 @@ export default function Home() {
     console.log("Campaign submit payload:", payload);
     sessionStorage.setItem("campaignPayload", JSON.stringify(payload));
 
-    toast.success("Settings submitted", {
-      description: `Campaign score ${score} (level ${level}) — payload saved to session storage.`,
+    toast.success("Message sent successfully", {
+      description: `Campaign score ${score} (level ${level}) saved.`,
+      duration: 5000,
     });
   };
 
