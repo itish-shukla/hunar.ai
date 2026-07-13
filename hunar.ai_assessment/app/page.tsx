@@ -7,6 +7,8 @@ import { Toggle } from "@/components/ui/toggle";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import level_1 from "@/public/level-1.png";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
@@ -34,6 +36,14 @@ export default function Home() {
   const [redialCount, setRedialCount] = useState<number>(5);
   const [redialInterval, setRedialInterval] = useState<string>("3 hours");
 
+  const campaignScore = 100;
+  const penalties = [
+    { label: "Calling days penalty", value: 0 },
+    { label: "Calling window penalty", value: 0 },
+    { label: "Redial count penalty", value: 0 },
+    { label: "Redial interval penalty", value: 0 },
+  ];
+
   const toggleDay = (day: string) => {
     setSelectedDays((prev) =>
       prev.includes(day)
@@ -52,18 +62,19 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-white py-2.5 px-10">
+    <div className="min-h-screen bg-white py-6 pl-10 pr-20">
       <main className="w-full">
         <h1 className="mb-10 text-3xl font-bold tracking-[-0.04em]">
           Redial & Guardrails
         </h1>
 
-        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
-          <Card className="w-1/2 rounded-[16px] py-2.5 px-6 bg-[#F4F4F5]">
+       <div className="flex justify-between gap-10 w-full">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-10 w-1/2">
+          <Card className="w-full rounded-[16px] py-2.5 px-6 bg-[#F4F4F5] gap-2.5 ring-0">
             <span className="text-lg font-semibold">Guardrails</span>
             <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
               <section>
-                <h2 className="mb-6 text-lg font-semibold underline-offset-4">
+                <h2 className="mb-3 text-lg font-semibold underline-offset-4">
                   Calling days
                 </h2>
 
@@ -73,7 +84,7 @@ export default function Home() {
                       key={day}
                       pressed={selectedDays.includes(day)}
                       onPressedChange={() => toggleDay(day)}
-                      className="px-4 py-6 min-w-20 rounded-[8px] border"
+                      className="px-4 py-6 min-w-18 rounded-[8px] border text-[14px] font-medium"
                       variant="outline"
                     >
                       {day}
@@ -111,7 +122,7 @@ export default function Home() {
 
             </CardContent>
           </Card>
-          <Card className="w-1/2 rounded-[16px] py-2.5 px-6 bg-[#F4F4F5]">
+          <Card className="w-full rounded-[16px] py-2.5 px-6 bg-[#F4F4F5] gap-2.5 ring-0 overflow-visible">
             <span className="text-lg font-semibold">Redial</span>
             <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
               <section>
@@ -154,7 +165,7 @@ export default function Home() {
                       onClick={() => setRedialInterval(interval)}
                       aria-pressed={redialInterval === interval}
                       className={cn(
-                        "flex-1 whitespace-nowrap rounded-[8px] px-4 py-2 text-sm font-medium transition-colors",
+                        "flex-1 whitespace-nowrap rounded-[8px] px-4 py-2 text-sm font-medium transition-colors text-[14px]",
                         redialInterval === interval
                           ? "bg-white text-foreground shadow-sm"
                           : "text-zinc-600 hover:text-foreground"
@@ -169,6 +180,36 @@ export default function Home() {
             </CardContent>
           </Card>
         </form>
+
+        <div className="w-1/2 rounded-[24px] border border-[#E4E4E7] overflow-auto h-full">
+          <div className="relative w-full">
+            <Image
+              src={level_1}
+              alt="Campaign score"
+              className="w-full h-full"
+              priority
+            />
+            <div className="absolute inset-0 w-full flex flex-col items-center justify-center gap-1 text-white">
+              <span className="text-5xl font-bold">{campaignScore}</span>
+              <span className="text-sm font-medium">Campaign score</span>
+            </div>
+          </div>
+
+          <div className="divide-y divide-[#F4F4F5] py-2">
+            {penalties.map((penalty) => (
+              <div
+                key={penalty.label}
+                className="flex items-center justify-between px-8 py-4 text-sm"
+              >
+                <span className="text-[#71717A] font-semibold text-[14px]">{penalty.label}</span>
+                <span className="font-semibold text-green-600">
+                  {penalty.value}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+        </div>
       </main>
     </div>
   );
