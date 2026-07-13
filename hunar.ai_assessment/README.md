@@ -1,36 +1,57 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Redial & Guardrails
 
-## Getting Started
+A single-screen campaign configuration UI. The left column lets you tune four
+call-pacing inputs; the right column shows a live **campaign score** (0–100), a
+weather illustration that reflects the score's severity level, and a per-input
+penalty breakdown.
 
-First, run the development server:
+## How the score works
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+Each input contributes a penalty (always ≤ 0) drawn from a fixed dictionary
+(`FE assignment - penalty dictionary.xlsx`). The score is:
+
+```
+score = 100 + calling-days + calling-window + redial-count + redial-interval   (floored at 0)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The score maps to a weather **level** (1 best → 4 worst), which selects the
+illustration (`public/level-{1..4}.png`) and, from level 3, shows an advisory
+banner:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| Level | Score  |
+| ----- | ------ |
+| 1     | 82–100 |
+| 2     | 62–81  |
+| 3     | 42–61  |
+| 4     | 0–41   |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Submitting logs a backend-shaped payload to the console and stores it in
+`sessionStorage` under `campaignPayload`.
 
-## Learn More
+## Project layout
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/page.tsx              State + orchestration; renders the three cards + submit
+components/
+  guardrails-card.tsx     Calling days + calling window
+  redial-card.tsx         Redial count + redial interval
+  score-card.tsx          Weather image, advisory banner, penalty rows
+  ui/                     shadcn primitives (button, card, slider, toggle, sonner)
+lib/
+  constants.ts            DAYS, TIMES, REDIAL_INTERVALS + shared types
+  scoring.ts              Penalty dictionaries + pure computeScore()
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+The scoring logic in `lib/scoring.ts` is a pure function of the settings, so it
+can be unit-tested independently of the UI.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Getting started
 
-## Deploy on Vercel
+```bash
+npm install
+npm run dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open [http://localhost:3000](http://localhost:3000).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Built with Next.js 16 (App Router), Tailwind CSS v4, and shadcn/ui on Base UI.

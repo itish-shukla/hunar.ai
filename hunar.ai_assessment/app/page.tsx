@@ -1,215 +1,115 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Toggle } from "@/components/ui/toggle";
-import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import Image from "next/image";
-import level_1 from "@/public/level-1.png";
-
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
+import { GuardrailsCard } from "@/components/guardrails-card";
+import { RedialCard } from "@/components/redial-card";
+import { ScoreCard } from "@/components/score-card";
+import { TIMES, type Day, type RedialInterval } from "@/lib/constants";
+import { computeScore } from "@/lib/scoring";
 
 export default function Home() {
-  const [selectedDays, setSelectedDays] = useState<string[]>([
+  const [selectedDays, setSelectedDays] = useState<Day[]>([
     "Mon",
     "Tue",
     "Wed",
     "Thu",
     "Fri",
   ]);
+  const [callingWindow, setCallingWindow] = useState<[number, number]>([
+    0,
+    TIMES.length - 1,
+  ]);
+  const [redialCount, setRedialCount] = useState(5);
+  const [redialInterval, setRedialInterval] =
+    useState<RedialInterval>("3 hours");
 
-  const TIMES = [
-    { label: "8 AM", value: 8 },
-    { label: "11 AM", value: 11 },
-    { label: "2 PM", value: 14 },
-    { label: "5 PM", value: 17 },
-    { label: "9 PM", value: 21 },
-  ];
+  const { penalties, score, level, windowHours } = computeScore({
+    selectedDays,
+    callingWindow,
+    redialCount,
+    redialInterval,
+  });
 
-  const [callingWindow, setCallingWindow] = useState<[number, number]>([0, 4]);
-
-  const REDIAL_INTERVALS = ["3 hours", "6 hours", "9 hours", "12 hours", "24 hours"];
-
-  const [redialCount, setRedialCount] = useState<number>(5);
-  const [redialInterval, setRedialInterval] = useState<string>("3 hours");
-
-  const campaignScore = 100;
-  const penalties = [
-    { label: "Calling days penalty", value: 0 },
-    { label: "Calling window penalty", value: 0 },
-    { label: "Redial count penalty", value: 0 },
-    { label: "Redial interval penalty", value: 0 },
-  ];
-
-  const toggleDay = (day: string) => {
+  const toggleDay = (day: Day) =>
     setSelectedDays((prev) =>
-      prev.includes(day)
-        ? prev.filter((d) => d !== day)
-        : [...prev, day]
+      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day],
     );
+
+  // Keep the two window thumbs at least one hour apart (no zero-width window).
+  const handleWindowChange = ([start, end]: [number, number]) => {
+    if (end - start < 1) return;
+    setCallingWindow([start, end]);
   };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
-    console.log({
-      callingDays: selectedDays,
-      callingWindow,
-      redialCount,
-      redialInterval,
+    e.preventDefault();
+
+    // Simulated request payload, shaped like what we'd POST to the backend.
+    const payload = {
+      guardrails: {
+        callingDays: selectedDays,
+        callingWindow: {
+          start: TIMES[callingWindow[0]].value,
+          end: TIMES[callingWindow[1]].value,
+          startLabel: TIMES[callingWindow[0]].label,
+          endLabel: TIMES[callingWindow[1]].label,
+          hours: windowHours,
+        },
+      },
+      redial: {
+        count: redialCount,
+        interval: redialInterval,
+      },
+      penalties,
+      campaignScore: score,
+      level,
+      submittedAt: new Date().toISOString(),
+    };
+
+    console.log("Campaign submit payload:", payload);
+    sessionStorage.setItem("campaignPayload", JSON.stringify(payload));
+
+    toast.success("Settings submitted", {
+      description: `Campaign score ${score} (level ${level}) — payload saved to session storage.`,
     });
   };
 
   return (
-    <div className="min-h-screen bg-white py-6 pl-10 pr-20">
+    <div className="min-h-screen bg-white py-6 pr-20 pl-10">
       <main className="w-full">
         <h1 className="mb-10 text-3xl font-bold tracking-[-0.04em]">
           Redial & Guardrails
         </h1>
 
-       <div className="flex justify-between gap-10 w-full">
-        <form onSubmit={handleSubmit} className="flex flex-col gap-10 w-1/2">
-          <Card className="w-full rounded-[16px] py-2.5 px-6 bg-[#F4F4F5] gap-2.5 ring-0">
-            <span className="text-lg font-semibold">Guardrails</span>
-            <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
-              <section>
-                <h2 className="mb-3 text-lg font-semibold underline-offset-4">
-                  Calling days
-                </h2>
-
-                <div className="flex flex-wrap gap-3">
-                  {DAYS.map((day) => (
-                    <Toggle
-                      key={day}
-                      pressed={selectedDays.includes(day)}
-                      onPressedChange={() => toggleDay(day)}
-                      className="px-4 py-6 min-w-18 rounded-[8px] border text-[14px] font-medium"
-                      variant="outline"
-                    >
-                      {day}
-                    </Toggle>
-                  ))}
-                </div>
-              </section>
-
-              {/* Calling Window */}
-              <section>
-                <h2 className="mb-6 text-lg font-semibold">
-                  Calling window
-                </h2>
-
-                <Slider
-                  value={callingWindow}
-                  min={0}
-                  max={TIMES.length - 1}
-                  step={1}
-                  onValueChange={(value) => {
-                    if (Array.isArray(value) && value.length === 2) {
-                      setCallingWindow([value[0], value[1]]);
-                    }
-                  }}
-                />
-
-                <div className="mt-5 flex justify-between text-sm text-zinc-500">
-                  <span>8 AM</span>
-                  <span>11 AM</span>
-                  <span>2 PM</span>
-                  <span>5 PM</span>
-                  <span>9 PM</span>
-                </div>
-              </section>
-
-            </CardContent>
-          </Card>
-          <Card className="w-full rounded-[16px] py-2.5 px-6 bg-[#F4F4F5] gap-2.5 ring-0 overflow-visible">
-            <span className="text-lg font-semibold">Redial</span>
-            <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
-              <section>
-                <h2 className="mb-6 text-lg font-semibold underline-offset-4">
-                  Redial count
-                </h2>
-
-                <Slider
-                  value={redialCount}
-                  min={0}
-                  max={10}
-                  step={1}
-                  onValueChange={(value) => {
-                    if (typeof value === "number") {
-                      setRedialCount(value);
-                    }
-                  }}
-                />
-
-                <div className="mt-5 flex justify-between text-sm text-zinc-500">
-                  <span>0</span>
-                  <span>2</span>
-                  <span>4</span>
-                  <span>6</span>
-                  <span>8</span>
-                  <span>10</span>
-                </div>
-              </section>
-
-              <section>
-                <h2 className="mb-6 text-lg font-semibold">
-                  Redial interval
-                </h2>
-
-                <div className="flex gap-1 rounded-[12px] bg-[#F4F4F5] p-0.75">
-                  {REDIAL_INTERVALS.map((interval) => (
-                    <button
-                      key={interval}
-                      type="button"
-                      onClick={() => setRedialInterval(interval)}
-                      aria-pressed={redialInterval === interval}
-                      className={cn(
-                        "flex-1 whitespace-nowrap rounded-[8px] px-4 py-2 text-sm font-medium transition-colors text-[14px]",
-                        redialInterval === interval
-                          ? "bg-white text-foreground shadow-sm"
-                          : "text-zinc-600 hover:text-foreground"
-                      )}
-                    >
-                      {interval}
-                    </button>
-                  ))}
-                </div>
-              </section>
-
-            </CardContent>
-          </Card>
-        </form>
-
-        <div className="w-1/2 rounded-[24px] border border-[#E4E4E7] overflow-auto h-full">
-          <div className="relative w-full">
-            <Image
-              src={level_1}
-              alt="Campaign score"
-              className="w-full h-full"
-              priority
-            />
-            <div className="absolute inset-0 w-full flex flex-col items-center justify-center gap-1 text-white">
-              <span className="text-5xl font-bold">{campaignScore}</span>
-              <span className="text-sm font-medium">Campaign score</span>
+        <form onSubmit={handleSubmit}>
+          <div className="flex w-full flex-col gap-10 lg:flex-row">
+            <div className="flex w-full flex-col gap-10 lg:w-1/2">
+              <GuardrailsCard
+                selectedDays={selectedDays}
+                onToggleDay={toggleDay}
+                callingWindow={callingWindow}
+                onWindowChange={handleWindowChange}
+              />
+              <RedialCard
+                redialCount={redialCount}
+                onCountChange={setRedialCount}
+                redialInterval={redialInterval}
+                onIntervalChange={setRedialInterval}
+              />
             </div>
+
+            <ScoreCard score={score} level={level} penalties={penalties} />
           </div>
 
-          <div className="divide-y divide-[#F4F4F5] py-2">
-            {penalties.map((penalty) => (
-              <div
-                key={penalty.label}
-                className="flex items-center justify-between px-8 py-4 text-sm"
-              >
-                <span className="text-[#71717A] font-semibold text-[14px]">{penalty.label}</span>
-                <span className="font-semibold text-green-600">
-                  {penalty.value}
-                </span>
-              </div>
-            ))}
+          <div className="mt-10 flex justify-end">
+            <Button type="submit" className="bg-zinc-800 px-6">
+              Submit
+            </Button>
           </div>
-        </div>
-        </div>
+        </form>
       </main>
     </div>
   );
