@@ -1,61 +1,174 @@
-import Image from "next/image";
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import file from "@/public/file.svg"
+"use client";
+
+import { useState } from "react";
+
+import { Card, CardContent } from "@/components/ui/card";
+import { Toggle } from "@/components/ui/toggle";
+import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
 
 export default function Home() {
+  const [selectedDays, setSelectedDays] = useState<string[]>([
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+  ]);
+
+  const TIMES = [
+    { label: "8 AM", value: 8 },
+    { label: "11 AM", value: 11 },
+    { label: "2 PM", value: 14 },
+    { label: "5 PM", value: 17 },
+    { label: "9 PM", value: 21 },
+  ];
+
+  const [callingWindow, setCallingWindow] = useState<[number, number]>([0, 4]);
+
+  const REDIAL_INTERVALS = ["3 hours", "6 hours", "9 hours", "12 hours", "24 hours"];
+
+  const [redialCount, setRedialCount] = useState<number>(5);
+  const [redialInterval, setRedialInterval] = useState<string>("3 hours");
+
+  const toggleDay = (day: string) => {
+    setSelectedDays((prev) =>
+      prev.includes(day)
+        ? prev.filter((d) => d !== day)
+        : [...prev, day]
+    );
+  };
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    console.log({
+      callingDays: selectedDays,
+      callingWindow,
+      redialCount,
+      redialInterval,
+    });
+  };
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-white font-sans">
-      {/* {file} */}
+    <div className="min-h-screen bg-white py-2.5 px-10">
+      <main className="w-full">
+        <h1 className="mb-10 text-3xl font-bold tracking-[-0.04em]">
+          Redial & Guardrails
+        </h1>
 
-      <main className="flex flex-1 w-full flex-col items-center justify-between py-10 px-16 bg-white sm:items-start text-black">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-10">
+          <Card className="w-1/2 rounded-[16px] py-2.5 px-6 bg-[#F4F4F5]">
+            <span className="text-lg font-semibold">Guardrails</span>
+            <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
+              <section>
+                <h2 className="mb-6 text-lg font-semibold underline-offset-4">
+                  Calling days
+                </h2>
 
-        <span className="text-[28px] font-bold tracking-[-4%]">Redial & Guardrails</span>
-        <div className="flex w-full justify-between">
-          <div className="flex flex-col gap-10 w-1/2">
-            <div className="bg-[#F4F4F5] px-6 pt-2.5 font-semibold rounded-[16px]">
-              <span className="text-[14px]">Guardrails</span>
-              <div className="bg-white p-6 mt-2.5 -mx-6 -mb-2.5 border-[#E4E4E7] border font-semibold rounded-[16px]">
-                <div className="flex flex-col gap-3">
-                  <span className="text-[14px]">Calling days</span>
+                <div className="flex flex-wrap gap-3">
+                  {DAYS.map((day) => (
+                    <Toggle
+                      key={day}
+                      pressed={selectedDays.includes(day)}
+                      onPressedChange={() => toggleDay(day)}
+                      className="px-4 py-6 min-w-20 rounded-[8px] border"
+                      variant="outline"
+                    >
+                      {day}
+                    </Toggle>
+                  ))}
                 </div>
-              </div>
-            </div>
-          </div>
-        </div>
+              </section>
 
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+              {/* Calling Window */}
+              <section>
+                <h2 className="mb-6 text-lg font-semibold">
+                  Calling window
+                </h2>
+
+                <Slider
+                  value={callingWindow}
+                  min={0}
+                  max={TIMES.length - 1}
+                  step={1}
+                  onValueChange={(value) => {
+                    if (Array.isArray(value) && value.length === 2) {
+                      setCallingWindow([value[0], value[1]]);
+                    }
+                  }}
+                />
+
+                <div className="mt-5 flex justify-between text-sm text-zinc-500">
+                  <span>8 AM</span>
+                  <span>11 AM</span>
+                  <span>2 PM</span>
+                  <span>5 PM</span>
+                  <span>9 PM</span>
+                </div>
+              </section>
+
+            </CardContent>
+          </Card>
+          <Card className="w-1/2 rounded-[16px] py-2.5 px-6 bg-[#F4F4F5]">
+            <span className="text-lg font-semibold">Redial</span>
+            <CardContent className="space-y-10 p-8 bg-white -mx-6 -mb-2.5 rounded-[16px] border border-[#E4E4E7]">
+              <section>
+                <h2 className="mb-6 text-lg font-semibold underline-offset-4">
+                  Redial count
+                </h2>
+
+                <Slider
+                  value={redialCount}
+                  min={0}
+                  max={10}
+                  step={1}
+                  onValueChange={(value) => {
+                    if (typeof value === "number") {
+                      setRedialCount(value);
+                    }
+                  }}
+                />
+
+                <div className="mt-5 flex justify-between text-sm text-zinc-500">
+                  <span>0</span>
+                  <span>2</span>
+                  <span>4</span>
+                  <span>6</span>
+                  <span>8</span>
+                  <span>10</span>
+                </div>
+              </section>
+
+              <section>
+                <h2 className="mb-6 text-lg font-semibold">
+                  Redial interval
+                </h2>
+
+                <div className="flex gap-1 rounded-[12px] bg-[#F4F4F5] p-0.75">
+                  {REDIAL_INTERVALS.map((interval) => (
+                    <button
+                      key={interval}
+                      type="button"
+                      onClick={() => setRedialInterval(interval)}
+                      aria-pressed={redialInterval === interval}
+                      className={cn(
+                        "flex-1 whitespace-nowrap rounded-[8px] px-4 py-2 text-sm font-medium transition-colors",
+                        redialInterval === interval
+                          ? "bg-white text-foreground shadow-sm"
+                          : "text-zinc-600 hover:text-foreground"
+                      )}
+                    >
+                      {interval}
+                    </button>
+                  ))}
+                </div>
+              </section>
+
+            </CardContent>
+          </Card>
+        </form>
       </main>
     </div>
   );
