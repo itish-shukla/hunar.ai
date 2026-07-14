@@ -44,12 +44,12 @@ export function ScoreCard({ score, level, penalties }: ScoreCardProps) {
       {level >= 3 && (
         <div className="bg-blue-50 px-8 py-5">
           <div className="flex items-center gap-2">
-            <Sparkles className="size-4 fill-blue-600 text-blue-600" />
-            <span className="font-semibold text-blue-600">
+            <Sparkles className="size-4 fill-[#12367E] text-[#12367E]" />
+            <span className="font-semibold text-[#12367E]">
               Your settings are not optimized!
             </span>
           </div>
-          <p className="mt-2 text-sm text-zinc-800">
+          <p className="mt-2 text-sm text-zinc-800 font-medium">
             Your settings may slow down your calling operations and campaign
             completion. We recommend fixing your settings.
           </p>
