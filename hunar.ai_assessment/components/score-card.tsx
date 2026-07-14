@@ -25,7 +25,7 @@ type ScoreCardProps = {
 
 export function ScoreCard({ score, level, penalties }: ScoreCardProps) {
   return (
-    <div className="w-full overflow-hidden rounded-3xl border border-zinc-200 lg:w-1/2">
+    <div className="size-full overflow-hidden rounded-3xl border border-zinc-200 lg:w-1/2">
       <div className="relative">
         <Image
           src={LEVEL_IMAGES[level - 1]}
