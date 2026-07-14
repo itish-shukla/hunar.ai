@@ -5,8 +5,6 @@ import { Toggle } from "@/components/ui/toggle";
 import { Slider } from "@/components/ui/slider";
 import { DAYS, TIMES, type Day } from "@/lib/constants";
 
-const WINDOW_TICKS = [0, 3, 6, 9, 13];
-
 type GuardrailsCardProps = {
   selectedDays: Day[];
   onToggleDay: (day: Day) => void;
@@ -58,10 +56,18 @@ export function GuardrailsCard({
             }}
           />
 
-          <div className="mt-5 flex justify-between text-sm text-zinc-500">
-            {WINDOW_TICKS.map((idx) => (
-              <span key={idx}>{TIMES[idx].label}</span>
-            ))}
+          {/* Spacers grow in proportion to the hours between labels (3/3/3/4),
+              so each label lands under its tick on the 13-hour track. */}
+          <div className="mt-5 flex text-sm text-zinc-500">
+            <span>8 AM</span>
+            <span className="grow-3" />
+            <span>11 AM</span>
+            <span className="grow-3" />
+            <span>2 PM</span>
+            <span className="grow-3" />
+            <span>5 PM</span>
+            <span className="grow-4" />
+            <span>9 PM</span>
           </div>
         </section>
       </CardContent>
