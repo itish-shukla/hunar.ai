@@ -5,7 +5,7 @@ import { Toggle } from "@/components/ui/toggle";
 import { Slider } from "@/components/ui/slider";
 import { DAYS, TIMES, type Day } from "@/lib/constants";
 
-const WINDOW_TICK_COUNT = 5;
+const WINDOW_TICKS = [0, 3, 6, 9, 13];
 
 type GuardrailsCardProps = {
   selectedDays: Day[];
@@ -59,10 +59,8 @@ export function GuardrailsCard({
           />
 
           <div className="mt-5 flex justify-between text-sm text-zinc-500">
-            {Array.from({ length: WINDOW_TICK_COUNT }, (_, i) =>
-              Math.floor((i * (TIMES.length - 1)) / (WINDOW_TICK_COUNT - 1)),
-            ).map((idx, i) => (
-              <span key={i}>{TIMES[idx].label}</span>
+            {WINDOW_TICKS.map((idx) => (
+              <span key={idx}>{TIMES[idx].label}</span>
             ))}
           </div>
         </section>

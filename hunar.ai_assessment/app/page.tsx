@@ -107,8 +107,8 @@ export default function Home() {
             <ScoreCard score={score} level={level} penalties={penalties} />
           </div>
 
-          <div className="mt-10 flex justify-end">
-            <Button type="submit" className="bg-zinc-800 px-6">
+          <div className="mt-10 flex justify-end border-t -ml-10 -mr-20">
+            <Button type="submit" className="bg-zinc-800 px-6 py-5 mr-16 mt-10 rounded-[12px]">
               Submit
             </Button>
           </div>
